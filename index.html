@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vert Academy | LEAD</title>
+<meta name="description" content="Vert Academy: Saturday sessions at LEAD. 8 athletes per session. Registration opens Monday at 6:00 AM.">
+<meta name="theme-color" content="#060606">
+<meta property="og:title" content="Vert Academy | LEAD">
+<meta property="og:description" content="Saturday sessions at 10:00 AM. 8 spots each. Registration opens Monday at 6:00 AM.">
+<meta property="og:image" content="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #060606;
+    --panel: #0a0a0a;
+    --raised: #111112;
+    --line: #1d1d1d;
+    --line-2: #2a2a2a;
+    --text: #f2f2f2;
+    --text-2: #d8d8d8;
+    --muted: #9a9a9a;
+    --dim: #8a8a8a;
+    --faint: #5a5a5a;
+    --accent: #fc5a22;      /* Vert Academy orange, sampled from the logo */
+    --accent-ink: #060606;
+    --ok: #f2f2f2;
+    --radius: 2px;
+    --pad: 56px;
+    --display: 'Oswald', 'Arial Narrow', sans-serif;
+    --body: 'Work Sans', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px) 0 0 / 100% 48px,
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px) 0 0 / 48px 100%,
+      var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  h1, h2, h3, .label { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin: 0; }
+  .mono { font-family: var(--mono); }
+  a { color: var(--text); }
+  button { font-family: inherit; cursor: pointer; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 0 var(--pad); }
+
+  /* ---------- Demo banner ---------- */
+  .demo-banner {
+    display: none;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    text-align: center; padding: 8px 16px; letter-spacing: 0.04em;
+  }
+  .demo-banner b { color: var(--accent); font-weight: 500; }
+  body.is-demo .demo-banner { display: block; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { border-bottom: 1px solid var(--line); background: rgba(6,6,6,0.88); backdrop-filter: blur(6px); position: sticky; top: 0; z-index: 10; }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 18px; padding-bottom: 18px; }
+  .brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
+  .brand img { width: 38px; height: 38px; object-fit: contain; display: block; }
+  .brand-name { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: 0.08em; line-height: 1; color: var(--text); }
+  .brand-sub { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-top: 5px; }
+  .sys { display: flex; align-items: center; gap: 24px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .sys .clock { color: var(--text-2); }
+  .status-pill { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-2); border-radius: var(--radius); padding: 6px 10px; font-size: 11px; letter-spacing: 0.06em; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); flex: none; }
+  .dot.live { background: var(--accent); box-shadow: 0 0 0 0 rgba(252,90,34,0.6); animation: pulse 2s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(252,90,34,0.55); } 70% { box-shadow: 0 0 0 8px rgba(252,90,34,0); } 100% { box-shadow: 0 0 0 0 rgba(252,90,34,0); } }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 72px 0 56px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 0.08em; display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .eyebrow::before { content: ""; width: 28px; height: 1px; background: var(--accent); }
+  .hero h1 { font-size: clamp(56px, 9vw, 124px); line-height: 0.92; letter-spacing: 0.02em; font-weight: 700; color: var(--accent); }
+  .hero h1 .thin { display: block; color: transparent; -webkit-text-stroke: 1.5px var(--accent); }
+  .hero p.lede { font-size: 18px; color: var(--text-2); max-width: 520px; margin: 24px 0 0; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 48px; padding: 0 28px; border-radius: var(--radius);
+    font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em; font-size: 15px; font-weight: 600;
+    text-decoration: none; border: 1px solid transparent; transition: background .15s, color .15s, border-color .15s;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { background: #ff7442; }
+  .btn-ghost { background: transparent; color: var(--text-2); border-color: var(--line-2); }
+  .btn-ghost:hover { border-color: var(--text-2); color: var(--text); }
+  .btn[disabled], .btn.is-disabled { background: #161617; color: var(--faint); border-color: var(--line); cursor: not-allowed; pointer-events: none; }
+  .btn:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .brackets::before, .brackets::after { content: ""; position: absolute; width: 14px; height: 14px; border: 1px solid var(--muted); pointer-events: none; }
+  .brackets::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+  .brackets::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+
+  /* ---------- Telemetry strip ---------- */
+  .strip { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--line); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; }
+  .cell { background: var(--panel); padding: 22px 28px; min-width: 0; }
+  .cell .k { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.06em; }
+  .cell .v { font-family: var(--mono); font-size: 26px; margin-top: 6px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cell .v small { font-size: 14px; color: var(--muted); }
+  .cell .v.accent { color: var(--accent); }
+
+  /* ---------- Sections ---------- */
+  section.block { padding: 72px 0 0; scroll-margin-top: 40px; }
+  .section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
+  .section-head h2 { font-size: 24px; }
+  .section-head .sub { font-size: 14px; color: var(--muted); margin-top: 6px; }
+  .section-head .meta { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+  /* ---------- Session cards ---------- */
+  .sessions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .card { position: relative; border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--panel); padding: 26px 26px 24px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .card.is-open { cursor: pointer; border-color: var(--accent); background: linear-gradient(180deg, rgba(252,90,34,0.06), rgba(252,90,34,0) 60%), var(--panel); }
+  .card-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .card .idx { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.06em; }
+  .badge { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; padding: 4px 8px; border-radius: var(--radius); border: 1px solid var(--line-2); color: var(--muted); display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .badge.open { border-color: var(--accent); color: var(--accent); }
+  .badge.full { border-color: var(--text-2); color: var(--text); }
+  .card .day { font-family: var(--display); text-transform: uppercase; font-weight: 600; font-size: 40px; line-height: 1; letter-spacing: 0.03em; }
+  .card .time { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .cap { display: flex; flex-direction: column; gap: 10px; }
+  .cap-row { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .cap-row b { color: var(--text); font-weight: 500; }
+  .segments { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+  .seg { height: 10px; border: 1px solid var(--line-2); border-radius: 1px; background: transparent; }
+  .seg.on { background: var(--accent); border-color: var(--accent); }
+  .card.is-full .seg.on { background: var(--text-2); border-color: var(--text-2); }
+  .lockbox { border: 1px dashed var(--line-2); border-radius: var(--radius); padding: 14px 16px; }
+  .lockbox .k { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.06em; }
+  .lockbox .cd { font-family: var(--mono); font-size: 24px; color: var(--text-2); margin-top: 4px; }
+  .lockbox .when { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .card .btn { width: 100%; }
+  /* Upcoming sessions: visible but greyed out (countdown stays readable) */
+  .card.is-locked { background: rgba(10,10,10,0.6); border-color: var(--line); }
+  .card.is-locked .day, .card.is-locked .time, .card.is-locked .cap { opacity: 0.42; }
+  .booked-note { font-family: var(--mono); font-size: 12px; color: var(--text-2); display: flex; gap: 8px; align-items: center; }
+  .booked-note::before { content: ""; width: 7px; height: 7px; background: var(--accent); border-radius: 50%; }
+
+  /* ---------- Registration ---------- */
+  .reg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 1px; background: var(--line); border: 1px solid var(--line); position: relative; }
+  .reg > div { background: var(--panel); padding: 40px; min-width: 0; }
+  .reg-info h3 { font-size: 15px; color: var(--muted); letter-spacing: 0.1em; }
+  .reg-info .target { font-family: var(--display); text-transform: uppercase; font-size: 34px; font-weight: 600; line-height: 1.05; margin-top: 12px; letter-spacing: 0.03em; }
+  .reg-info .target-sub { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .readouts { margin-top: 32px; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .readouts > div { background: var(--bg); padding: 14px 16px; display: flex; justify-content: space-between; gap: 16px; font-family: var(--mono); font-size: 13px; }
+  .readouts span:first-child { color: var(--dim); }
+  .readouts span:last-child { color: var(--text); text-align: right; }
+  .readouts .accent { color: var(--accent) !important; }
+
+  form { display: flex; flex-direction: column; gap: 20px; }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .field label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; }
+  .field input {
+    width: 100%; min-height: 50px; background: var(--bg); border: 1px solid var(--line-2); border-radius: var(--radius);
+    color: var(--text); font-family: var(--body); font-size: 16px; padding: 12px 16px;
+  }
+  .field input::placeholder { color: var(--faint); }
+  .field input:hover { border-color: #3a3a3a; }
+  .field input:focus { border-color: var(--text-2); outline: none; }
+  .field input[aria-invalid="true"] { border-color: var(--accent); }
+  .field .err { font-family: var(--mono); font-size: 11px; color: var(--accent); min-height: 0; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .form-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
+  .form-foot .fine { font-family: var(--mono); font-size: 11px; color: var(--dim); max-width: 300px; }
+  .form-msg { font-family: var(--mono); font-size: 12px; padding: 12px 14px; border: 1px solid var(--accent); color: var(--text); border-radius: var(--radius); display: none; }
+  .form-msg.show { display: block; }
+
+  .state-panel { display: flex; flex-direction: column; gap: 18px; justify-content: center; height: 100%; }
+  .state-panel .big { font-family: var(--display); text-transform: uppercase; font-size: 30px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.1; }
+  .state-panel .big .accent { color: var(--accent); }
+  .state-panel p { color: var(--muted); margin: 0; max-width: 460px; }
+  .state-panel .cd { font-family: var(--mono); font-size: 34px; color: var(--text); }
+  .confirm-code { font-family: var(--mono); font-size: 13px; color: var(--text-2); border: 1px solid var(--line-2); padding: 14px 16px; display: grid; gap: 6px; }
+  .confirm-code span { color: var(--dim); }
+
+  /* ---------- How it works ---------- */
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .step { background: var(--panel); padding: 28px; }
+  .step .n { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+  .step h3 { font-size: 18px; margin: 12px 0 8px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  footer { margin-top: 88px; border-top: 1px solid var(--line); }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-top: 28px; padding-bottom: 40px; font-family: var(--mono); font-size: 11px; color: var(--dim); flex-wrap: wrap; }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--text); }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1080px) {
+    .sessions { grid-template-columns: 1fr; }
+    .card { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); column-gap: 32px; }
+    .card-top, .card .btn, .card .booked-note { grid-column: 1 / -1; }
+  }
+  @media (max-width: 860px) {
+    :root { --pad: 16px; }
+    .hero { padding: 36px 0 32px; }
+    .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cell { padding: 16px; }
+    .cell .k { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar .wrap { padding-top: 12px; padding-bottom: 12px; }
+    .brand-sub { display: none; }
+    .brand-name { font-size: 17px; white-space: nowrap; }
+    .brand img { width: 32px; height: 32px; }
+    .status-pill { white-space: nowrap; font-size: 10px; padding: 5px 8px; }
+    .cell .v { font-size: 20px; }
+    .reg { grid-template-columns: 1fr; }
+    .reg > div { padding: 24px 16px; }
+    .steps { grid-template-columns: 1fr; }
+    .sys .clock-wrap { display: none; }
+    section.block { padding-top: 56px; }
+    .card { display: flex; }
+    .card .day { font-size: 34px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .dot.live { animation: none; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="demo-banner" role="note"><b>DEMO MODE</b> · sign-ups are saved in this browser only. Add the Google Apps Script URL to CONFIG.API_URL to go live.</div>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Vert Academy home">
+      <img src="assets/vert-logo.png" alt="" width="38" height="38">
+      <div>
+        <div class="brand-name">VERT ACADEMY</div>
+        <div class="brand-sub">LEAD · Weekend Program</div>
+      </div>
+    </a>
+    <div class="sys">
+      <span class="clock-wrap"><span class="clock" id="clock">--:--:--</span></span>
+      <span class="status-pill"><span class="dot" id="statusDot"></span><span id="statusText">SYNCING</span></span>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <h1>Vert<span class="thin">Academy</span></h1>
+      <p class="lede">Time to get your bounce up. Reserve your spot below.</p>
+    </div>
+  </section>
+
+  <div class="strip" aria-label="Next session status">
+    <div class="cell"><div class="k">NEXT SESSION</div><div class="v" id="tNext">--</div></div>
+    <div class="cell"><div class="k">T-MINUS</div><div class="v" id="tCountdown">--</div></div>
+    <div class="cell"><div class="k">SPOTS FILLED</div><div class="v" id="tFilled">-- / 8</div></div>
+    <div class="cell"><div class="k">REGISTRATION</div><div class="v" id="tReg">--</div></div>
+  </div>
+
+  <section class="block" id="schedule">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <h2>Session Schedule</h2>
+        </div>
+      </div>
+      <div class="sessions" id="sessions" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="block" id="register" hidden>
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <h2>Registration</h2>
+          <div class="sub">First come, first served. Your spot is confirmed as soon as you submit.</div>
+        </div>
+      </div>
+      <div class="reg brackets">
+        <div class="reg-info">
+          <h3>Booking for</h3>
+          <div class="target" id="rTarget">--</div>
+          <div class="target-sub" id="rTargetSub">10:00 AM</div>
+          <div class="readouts">
+            <div><span>SPOTS FILLED</span><span id="rFilled">--</span></div>
+            <div><span>SPOTS LEFT</span><span id="rLeft" class="accent">--</span></div>
+            <div><span>SESSION STARTS IN</span><span id="rCountdown">--</span></div>
+          </div>
+        </div>
+        <div id="regPanel"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="section-head"><div><h2>How it works</h2></div></div>
+      <div class="steps">
+        <div class="step"><div class="n">01</div><h3>Monday · 6:00 AM</h3><p>Registration opens for that Saturday's session. Sessions further out show a countdown until they open.</p></div>
+        <div class="step"><div class="n">02</div><h3>8 spots only</h3><p>Enter your name, phone and email to claim a spot. Once 8 athletes sign up, the session closes.</p></div>
+        <div class="step"><div class="n">03</div><h3>Saturday · 10:00 AM</h3><p>Show up ready to train. The next session's registration opens Monday morning.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>VERT ACADEMY · AT LEAD HOOPS</span>
+    <a href="https://trainatlead.com">trainatlead.com</a>
+  </div>
+</footer>
+
+<template id="formTpl">
+  <form id="regForm" novalidate>
+    <div class="field">
+      <label for="fName">FULL NAME</label>
+      <input id="fName" name="name" type="text" autocomplete="name" placeholder="First and last name" maxlength="80" required>
+      <div class="err" id="eName"></div>
+    </div>
+    <div class="field">
+      <label for="fPhone">PHONE NUMBER</label>
+      <input id="fPhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555" maxlength="20" required>
+      <div class="err" id="ePhone"></div>
+    </div>
+    <div class="field">
+      <label for="fEmail">EMAIL</label>
+      <input id="fEmail" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@email.com" maxlength="120" required>
+      <div class="err" id="eEmail"></div>
+    </div>
+    <div class="hp" aria-hidden="true"><label for="fWebsite">Website</label><input id="fWebsite" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+    <div class="form-msg" id="formMsg" role="alert"></div>
+    <div class="form-foot">
+      <span class="fine">We'll use your contact info for session updates only.</span>
+      <button class="btn btn-primary" type="submit" id="submitBtn">Claim my spot</button>
+    </div>
+  </form>
+</template>
+
+<script>
+/* =====================================================================
+   CONFIG: the only part you should need to edit.
+   API_URL: paste the Google Apps Script web app URL (ends in /exec).
+            Leave empty to run in demo mode (saves to this browser only).
+   ===================================================================== */
+const CONFIG = {
+  API_URL: 'https://script.google.com/macros/s/AKfycbyHDH_FX_3OkaRfHJFoynNFFNyfhMXW99un9gj5WL-1MEKTTtQI4QIAR6Zk2BlQ7t_6/exec',
+  TIMEZONE: 'America/Los_Angeles',
+  CAPACITY: 8,
+  SESSION_HOUR: 10,          // Saturday 10:00 AM
+  OPEN_DAYS_BEFORE: 5,       // Monday before the Saturday
+  OPEN_HOUR: 6,              // 6:00 AM
+  SESSIONS_SHOWN: 3,
+  REFRESH_SECONDS: 20
+};
+
+(() => {
+  'use strict';
+  const TZ = CONFIG.TIMEZONE;
+  const CAP = CONFIG.CAPACITY;
+  const DEMO = !CONFIG.API_URL;
+  const params = new URLSearchParams(location.search);
+  // Demo-only time travel for testing: ?now=2026-11-14T09:59:50-08:00
+  const timeOffset = (DEMO && params.get('now') && !isNaN(Date.parse(params.get('now'))))
+    ? Date.parse(params.get('now')) - Date.now() : 0;
+  const now = () => new Date(Date.now() + timeOffset);
+  if (DEMO) document.body.classList.add('is-demo');
+
+  /* ---------------- Time helpers (all in Pacific time) ---------------- */
+  const pad = (n, l = 2) => String(n).padStart(l, '0');
+  const partsFmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', weekday: 'short', hourCycle: 'h23'
+  });
+  const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function tzParts(date) {
+    const p = {};
+    for (const x of partsFmt.formatToParts(date)) p[x.type] = x.value;
+    return { y: +p.year, m: +p.month, d: +p.day, h: (+p.hour) % 24, mi: +p.minute, s: +p.second, wd: WD.indexOf(p.weekday) };
+  }
+  // Wall-clock time in TZ -> real instant (handles daylight saving)
+  function zoned(y, m, d, h, mi = 0) {
+    const target = Date.UTC(y, m - 1, d, h, mi);
+    let guess = target;
+    for (let i = 0; i < 3; i++) {
+      const p = tzParts(new Date(guess));
+      const diff = target - Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi);
+      if (!diff) break;
+      guess += diff;
+    }
+    return new Date(guess);
+  }
+  function addDays(o, n) {
+    const t = new Date(Date.UTC(o.y, o.m - 1, o.d + n));
+    return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() };
+  }
+  const fmt = (opts) => new Intl.DateTimeFormat('en-US', { timeZone: TZ, ...opts });
+  const fDay = fmt({ weekday: 'short', month: 'short', day: 'numeric' });
+  const fDayLong = fmt({ weekday: 'short', month: 'short', day: 'numeric' }); // e.g. "Sat, Nov 14"
+  const fTime = fmt({ hour: 'numeric', minute: '2-digit' });
+  const fClock = fmt({ hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+  const upper = (s) => s.replace(/,/g, '').toUpperCase();
+
+  function getSessions(at) {
+    const p = tzParts(at);
+    let day = addDays(p, (6 - p.wd + 7) % 7);
+    if (zoned(day.y, day.m, day.d, CONFIG.SESSION_HOUR) <= at) day = addDays(day, 7);
+    return Array.from({ length: CONFIG.SESSIONS_SHOWN }, (_, i) => {
+      const sd = addDays(day, 7 * i);
+      const od = addDays(sd, -CONFIG.OPEN_DAYS_BEFORE);
+      return {
+        id: `${sd.y}-${pad(sd.m)}-${pad(sd.d)}`,
+        start: zoned(sd.y, sd.m, sd.d, CONFIG.SESSION_HOUR),
+        opens: zoned(od.y, od.m, od.d, CONFIG.OPEN_HOUR)
+      };
+    });
+  }
+
+  function countdown(ms, compact) {
+    if (ms < 0) ms = 0;
+    const s = Math.floor(ms / 1000);
+    const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    const hms = `${pad(h)}:${pad(m)}:${pad(sec)}`;
+    if (compact) return d ? `${d}D ${hms}` : hms;
+    return d ? `${pad(d)}D ${hms}` : hms;
+  }
+
+  /* ---------------- Data layer ---------------- */
+  const store = {
+    get(k, f) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch { return f; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+
+  const demoApi = {
+    async status(ids) {
+      const db = store.get('vert-demo-db', {});
+      const counts = {};
+      ids.forEach(id => counts[id] = (db[id] || []).length);
+      return { ok: true, capacity: CAP, counts };
+    },
+    async book(b) {
+      await new Promise(r => setTimeout(r, 450));
+      const s = getSessions(now()).find(x => x.id === b.session);
+      const t = now();
+      if (!s) return { ok: false, code: 'INVALID', message: 'That session is not available.' };
+      if (t < s.opens) return { ok: false, code: 'NOT_OPEN', message: 'Registration for this session is not open yet.' };
+      if (t >= s.start) return { ok: false, code: 'CLOSED', message: 'Registration for this session has closed.' };
+      const db = store.get('vert-demo-db', {});
+      const list = db[b.session] || [];
+      if (list.length >= CAP) return { ok: false, code: 'FULL', count: list.length, message: 'This session just filled up.' };
+      const digits = b.phone.replace(/\D/g, '');
+      if (list.some(r => r.email === b.email.toLowerCase() || r.phone === digits))
+        return { ok: false, code: 'DUPLICATE', count: list.length, message: 'You are already registered for this session.' };
+      list.push({ name: b.name, phone: digits, email: b.email.toLowerCase(), ts: Date.now() });
+      db[b.session] = list; store.set('vert-demo-db', db);
+      return { ok: true, spot: list.length, count: list.length, capacity: CAP };
+    }
+  };
+
+  const liveApi = {
+    async status(ids) {
+      const r = await fetch(`${CONFIG.API_URL}?action=status&sessions=${encodeURIComponent(ids.join(','))}&_=${Date.now()}`, { cache: 'no-store' });
+      return r.json();
+    },
+    async book(b) {
+      // text/plain body avoids a CORS preflight, which Apps Script cannot answer
+      const r = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(b) });
+      return r.json();
+    }
+  };
+  const api = DEMO ? demoApi : liveApi;
+
+  /* ---------------- State ---------------- */
+  const state = {
+    sessions: getSessions(now()),
+    counts: {},
+    synced: false,
+    syncError: false,
+    booked: store.get('vert-booked', {}),   // { sessionId: {spot, name} } for this browser
+    justBooked: null,
+    regOpen: false,                         // registration shows after tapping the open session
+    renderKey: ''
+  };
+
+  function statusOf(s, t) {
+    const c = state.counts[s.id] ?? 0;
+    if (t >= s.start) return 'closed';
+    if (c >= CAP) return 'full';
+    if (t < s.opens) return 'locked';
+    return 'open';
+  }
+
+  async function refresh() {
+    try {
+      const res = await api.status(state.sessions.map(s => s.id));
+      if (!res || !res.ok) throw new Error('bad status');
+      state.counts = { ...state.counts, ...res.counts };
+      state.synced = true; state.syncError = false;
+    } catch (e) {
+      state.syncError = true;
+    }
+    state.renderKey = '';
+    tick();
+  }
+
+  /* ---------------- Rendering ---------------- */
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function segments(n, cls = '') {
+    let h = `<div class="segments ${cls}" aria-hidden="true">`;
+    for (let i = 0; i < CAP; i++) h += `<div class="seg${i < n ? ' on' : ''}"></div>`;
+    return h + '</div>';
+  }
+
+  function renderCards(t) {
+    $('sessions').innerHTML = state.sessions.map((s, i) => {
+      const st = statusOf(s, t);
+      const c = state.counts[s.id] ?? 0;
+      const known = state.synced;
+      const badge = {
+        open: '<span class="badge open"><span class="dot live"></span>OPEN</span>',
+        full: '<span class="badge full">FULL</span>',
+        locked: '<span class="badge">LOCKED</span>',
+        closed: '<span class="badge">CLOSED</span>'
+      }[st];
+      const label = i === 0 ? 'CURRENT SESSION' : `SESSION ${pad(i + 1)}`;
+      let action = '';
+      if (st === 'open') {
+        action = state.booked[s.id]
+          ? `<div class="booked-note">You're booked · Spot ${pad(state.booked[s.id].spot)} of ${pad(CAP)}</div>`
+          : `<a class="btn btn-primary" href="#register" data-book="${s.id}">Reserve spot · ${CAP - c} left</a>`;
+      } else if (st === 'full') {
+        action = `<span class="btn is-disabled" aria-disabled="true">Session full</span>`;
+      } else if (st === 'locked') {
+        action = `<div class="lockbox">
+            <div class="k">REGISTRATION OPENS IN</div>
+            <div class="cd" data-cd="${s.opens.getTime()}">${countdown(s.opens - t)}</div>
+            <div class="when">${upper(fDay.format(s.opens))} · ${fTime.format(s.opens)}</div>
+          </div>`;
+      }
+      return `<article class="card is-${st}"${st === 'open' ? ` data-book="${s.id}"` : ''} aria-label="${esc(fDayLong.format(s.start))} session, ${st}">
+          <div class="card-top"><span class="idx">${label}</span>${badge}</div>
+          <div>
+            <div class="day">${upper(fDay.format(s.start))}</div>
+            <div class="time">${fTime.format(s.start)}</div>
+          </div>
+          <div class="cap">
+            <div class="cap-row"><span>SPOTS FILLED</span><span><b>${known ? c : '--'}</b> / ${CAP}</span></div>
+            ${segments(st === 'locked' ? 0 : c)}
+          </div>
+          ${action}
+        </article>`;
+    }).join('');
+  }
+
+  function renderPanel(t) {
+    const s = state.sessions[0];
+    const st = statusOf(s, t);
+    const panel = $('regPanel');
+    const mine = state.booked[s.id];
+
+    if (state.justBooked && state.justBooked.session === s.id || (mine && st !== 'closed')) {
+      const b = state.justBooked && state.justBooked.session === s.id ? state.justBooked : mine;
+      panel.innerHTML = `<div class="state-panel">
+          <div class="big"><span class="accent">Confirmed.</span><br>You're in.</div>
+          <p>Your spot for ${esc(fDayLong.format(s.start))} at ${fTime.format(s.start)} is locked in. Show up ready to train.</p>
+          <div class="confirm-code">
+            <div><span>ATHLETE</span> ${esc(b.name || '')}</div>
+            <div><span>SPOT</span> ${pad(b.spot)} / ${pad(CAP)}</div>
+            <div><span>SESSION</span> ${upper(fDay.format(s.start))} · ${fTime.format(s.start)}</div>
+          </div>
+          <div><button type="button" class="btn btn-ghost" id="anotherBtn">Register another athlete</button></div>
+        </div>`;
+      $('anotherBtn').onclick = () => {
+        state.justBooked = null;
+        delete state.booked[s.id]; store.set('vert-booked', state.booked);
+        state.renderKey = ''; tick();
+        setTimeout(() => $('fName') && $('fName').focus(), 0);
+      };
+      return;
+    }
+
+    if (st === 'open') {
+      if (!$('regForm')) {
+        panel.innerHTML = '';
+        panel.appendChild($('formTpl').content.cloneNode(true));
+        wireForm();
+      }
+      return;
+    }
+
+    const next = state.sessions.find(x => statusOf(x, t) === 'locked');
+    if (st === 'full') {
+      panel.innerHTML = `<div class="state-panel">
+          <div class="big">Session full.<br><span class="accent">${CAP} / ${CAP}</span> spots taken.</div>
+          <p>All ${CAP} spots for ${esc(fDayLong.format(s.start))} are claimed. ${next ? `Registration for ${esc(fDayLong.format(next.start))} opens ${esc(fDay.format(next.opens))} at ${fTime.format(next.opens)}.` : ''}</p>
+          ${next ? `<div><div class="mono" style="font-size:11px;color:var(--dim);letter-spacing:.06em">NEXT REGISTRATION OPENS IN</div><div class="cd" data-cd="${next.opens.getTime()}">${countdown(next.opens - t)}</div></div>` : ''}
+        </div>`;
+    } else if (st === 'locked') {
+      panel.innerHTML = `<div class="state-panel">
+          <div class="big">Registration<br>opens <span class="accent">${upper(fDay.format(s.opens))}</span></div>
+          <p>Registration for ${esc(fDayLong.format(s.start))} opens at ${fTime.format(s.opens)}. ${CAP} spots, first come, first served.</p>
+          <div><div class="mono" style="font-size:11px;color:var(--dim);letter-spacing:.06em">OPENS IN</div><div class="cd" data-cd="${s.opens.getTime()}">${countdown(s.opens - t)}</div></div>
+        </div>`;
+    } else {
+      panel.innerHTML = `<div class="state-panel"><div class="big">Registration closed.</div><p>This session has started.</p></div>`;
+    }
+  }
+
+  function renderTelemetry(t) {
+    const s = state.sessions[0];
+    const st = statusOf(s, t);
+    const c = state.counts[s.id] ?? 0;
+    const known = state.synced;
+    $('tNext').textContent = upper(fDay.format(s.start));
+    $('tFilled').textContent = `${known ? c : '--'} / ${CAP}`;
+    $('tReg').textContent = { open: 'OPEN', full: 'FULL', locked: 'OPENS ' + upper(fmt({ weekday: 'short' }).format(s.opens)), closed: 'CLOSED' }[st];
+    $('tReg').className = 'v' + (st === 'open' ? ' accent' : '');
+    $('rTarget').textContent = upper(fDayLong.format(s.start));
+    $('rTargetSub').textContent = `${fTime.format(s.start)} · CURRENT SESSION`;
+    $('rFilled').textContent = known ? String(c) : '--';
+    $('rLeft').textContent = known ? String(Math.max(0, CAP - c)) : '--';
+
+    const dot = $('statusDot');
+    if (!state.synced && !state.syncError) { $('statusText').textContent = 'SYNCING'; dot.className = 'dot'; }
+    else if (state.syncError && !state.synced) { $('statusText').textContent = 'OFFLINE'; dot.className = 'dot'; }
+    else if (st === 'open') { $('statusText').textContent = 'REGISTRATION LIVE'; dot.className = 'dot live'; }
+    else if (st === 'full') { $('statusText').textContent = 'SESSION FULL'; dot.className = 'dot'; }
+    else { $('statusText').textContent = 'STANDBY'; dot.className = 'dot'; }
+  }
+
+  function tick() {
+    const t = now();
+    // Roll over to the next Saturday once a session starts
+    const fresh = getSessions(t);
+    if (fresh[0].id !== state.sessions[0].id) { state.sessions = fresh; state.renderKey = ''; refresh(); }
+
+    const key = state.sessions.map(s => s.id + ':' + statusOf(s, t) + ':' + (state.counts[s.id] ?? '-')).join('|')
+      + '|' + state.synced + '|' + JSON.stringify(state.booked) + '|' + (state.justBooked ? 1 : 0);
+    if (key !== state.renderKey) {
+      state.renderKey = key;
+      renderCards(t);
+      renderPanel(t);
+      renderTelemetry(t);
+    }
+    // Live countdowns
+    const s0 = state.sessions[0];
+    const toStart = countdown(s0.start - t, true);
+    $('tCountdown').textContent = toStart;
+    $('rCountdown').textContent = toStart;
+    $('clock').textContent = fClock.format(t);
+    document.querySelectorAll('[data-cd]').forEach(el => { el.textContent = countdown(+el.dataset.cd - t); });
+  }
+
+  /* ---------------- Form ---------------- */
+  function formatPhone(v) {
+    let d = v.replace(/\D/g, '');
+    if (d.length === 11 && d[0] === '1') d = d.slice(1);
+    d = d.slice(0, 10);
+    if (d.length < 4) return d;
+    if (d.length < 7) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  }
+  function setErr(input, errEl, msg) {
+    input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+    errEl.textContent = msg || '';
+  }
+  function wireForm() {
+    const f = $('regForm'), name = $('fName'), phone = $('fPhone'), email = $('fEmail'), msg = $('formMsg'), btn = $('submitBtn');
+    phone.addEventListener('input', () => { phone.value = formatPhone(phone.value); });
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.className = 'form-msg';
+      const v = { name: name.value.trim().replace(/\s+/g, ' '), phone: phone.value.trim(), email: email.value.trim() };
+      let bad = false;
+      if (v.name.length < 2 || !/\s/.test(v.name)) { setErr(name, $('eName'), 'Enter first and last name.'); bad = true; } else setErr(name, $('eName'));
+      if (phone.value.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '').length !== 10) { setErr(phone, $('ePhone'), 'Enter a 10-digit phone number.'); bad = true; } else setErr(phone, $('ePhone'));
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email)) { setErr(email, $('eEmail'), 'Enter a valid email address.'); bad = true; } else setErr(email, $('eEmail'));
+      if (bad) { f.querySelector('[aria-invalid="true"]').focus(); return; }
+
+      const s = state.sessions[0];
+      btn.disabled = true; btn.textContent = 'Securing spot...';
+      let res;
+      try {
+        res = await api.book({ session: s.id, name: v.name, phone: v.phone, email: v.email, website: $('fWebsite').value });
+      } catch (err) {
+        res = { ok: false, code: 'NETWORK', message: 'Could not reach the server. Check your connection and try again.' };
+      }
+      btn.disabled = false; btn.textContent = 'Claim my spot';
+      if (res && res.ok) {
+        state.counts[s.id] = res.count ?? (state.counts[s.id] ?? 0) + 1;
+        state.booked[s.id] = { spot: res.spot, name: v.name };
+        store.set('vert-booked', state.booked);
+        state.justBooked = { session: s.id, spot: res.spot, name: v.name };
+        state.renderKey = ''; tick();
+        document.getElementById('register').scrollIntoView({ block: 'start' });
+      } else {
+        if (res && typeof res.count === 'number') state.counts[s.id] = res.count;
+        if (res && res.code === 'FULL') state.counts[s.id] = CAP;
+        msg.textContent = (res && res.message) || 'Something went wrong. Please try again.';
+        msg.className = 'form-msg show';
+        if (res && (res.code === 'FULL' || res.code === 'CLOSED' || res.code === 'NOT_OPEN')) { state.renderKey = ''; refresh(); }
+      }
+    });
+  }
+
+  /* ---------------- Boot ---------------- */
+  // Tapping the open session reveals the registration section and jumps to it
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-book]');
+    if (!a) return;
+    e.preventDefault();
+    state.regOpen = true;
+    $('register').hidden = false;
+    $('register').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => $('fName') && $('fName').focus({ preventScroll: true }), 450);
+  });
+  tick();
+  refresh();
+  setInterval(tick, 1000);
+  setInterval(refresh, CONFIG.REFRESH_SECONDS * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+})();
+</script>
+</body>
+</html>
