@@ -233,9 +233,14 @@
     .card .day { font-size: 34px; }
   }
   @media (prefers-reduced-motion: reduce) { .dot.live { animation: none; } html { scroll-behavior: auto; } }
+
+  /* ---------- Grid pixels: orange light pixels travelling the background grid ---------- */
+  #gridFx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  main, footer, .demo-banner { position: relative; z-index: 1; }
 </style>
 </head>
 <body>
+<canvas id="gridFx" aria-hidden="true"></canvas>
 <div class="demo-banner" role="note"><b>DEMO MODE</b> · sign-ups are saved in this browser only. Add the Google Apps Script URL to CONFIG.API_URL to go live.</div>
 
 <header class="topbar">
@@ -738,6 +743,116 @@ const CONFIG = {
   setInterval(tick, 1000);
   setInterval(refresh, CONFIG.REFRESH_SECONDS * 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+})();
+
+/* =====================================================================
+   Grid pixels: small orange squares that travel along the 48px
+   background grid lines, turning at random intersections, each with a
+   short fading tail. Pure decoration; off for reduced-motion users.
+   ===================================================================== */
+(() => {
+  const cv = document.getElementById('gridFx');
+  if (!cv) return;
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { cv.remove(); return; }
+  const ctx = cv.getContext('2d');
+  const G = 48;            // grid spacing (matches the CSS background grid)
+  const OFF = 0.5;         // grid lines are 1px wide; travel on their centre
+  const RGB = '252,90,34'; // brand orange
+  const TURN_CHANCE = 0.35;
+  let W = 0, H = 0, parts = [], last = performance.now();
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  const targetCount = () => Math.max(4, Math.min(14, Math.round((W * H) / 85000)));
+  const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function spawn() {
+    const cols = Math.ceil(W / G), rows = Math.ceil(H / G);
+    const x = Math.floor(Math.random() * (cols + 1)) * G + OFF;
+    const y = (Math.floor(scrollY / G) + Math.floor(Math.random() * (rows + 1))) * G + OFF; // document coords
+    const d = DIRS[Math.random() * 4 | 0];
+    return { x, y, dx: d[0], dy: d[1], v: rand(45, 110), left: G, tail: rand(70, 150),
+             trail: [{ x, y }], age: 0, life: rand(5, 12) };
+  }
+
+  function step(p, dt) {
+    let dist = p.v * dt;
+    while (dist > 0) {
+      const m = Math.min(dist, p.left);
+      p.x += p.dx * m; p.y += p.dy * m; p.left -= m; dist -= m;
+      if (p.left <= 0) {                       // reached an intersection
+        p.left = G;
+        if (Math.random() < TURN_CHANCE) {     // turn left or right, never reverse
+          p.trail.push({ x: p.x, y: p.y });
+          const s = Math.random() < 0.5 ? 1 : -1;
+          [p.dx, p.dy] = [-p.dy * s, p.dx * s];
+        }
+      }
+    }
+    p.age += dt;
+    // Trim the trail so its length stays within p.tail
+    let len = 0, prev = { x: p.x, y: p.y };
+    for (let i = p.trail.length - 1; i >= 0; i--) {
+      const seg = Math.abs(prev.x - p.trail[i].x) + Math.abs(prev.y - p.trail[i].y);
+      if (len + seg > p.tail) {
+        const keep = p.tail - len, k = seg ? keep / seg : 0;
+        p.trail[i] = { x: prev.x + (p.trail[i].x - prev.x) * k, y: prev.y + (p.trail[i].y - prev.y) * k };
+        p.trail.splice(0, i);
+        break;
+      }
+      len += seg; prev = p.trail[i];
+    }
+  }
+
+  function draw(p) {
+    const sy = scrollY;
+    const fade = Math.min(1, p.age / 0.5, (p.life - p.age) / 1.2);
+    if (fade <= 0) return;
+    // Tail: segments from the head backwards, fading out
+    let len = 0, hx = p.x, hy = p.y;
+    ctx.lineWidth = 2; ctx.lineCap = 'butt';
+    for (let i = p.trail.length - 1; i >= 0; i--) {
+      const t = p.trail[i], seg = Math.abs(hx - t.x) + Math.abs(hy - t.y);
+      if (seg > 0) {
+        const g = ctx.createLinearGradient(hx, hy - sy, t.x, t.y - sy);
+        g.addColorStop(0, `rgba(${RGB},${0.55 * fade * (1 - len / p.tail)})`);
+        g.addColorStop(1, `rgba(${RGB},${0.55 * fade * Math.max(0, 1 - (len + seg) / p.tail)})`);
+        ctx.strokeStyle = g;
+        ctx.beginPath(); ctx.moveTo(hx, hy - sy); ctx.lineTo(t.x, t.y - sy); ctx.stroke();
+      }
+      len += seg; hx = t.x; hy = t.y;
+    }
+    // Head: small glowing square
+    ctx.shadowColor = `rgba(${RGB},${0.9 * fade})`; ctx.shadowBlur = 8;
+    ctx.fillStyle = `rgba(${RGB},${0.95 * fade})`;
+    ctx.fillRect(p.x - 1.5, p.y - sy - 1.5, 3, 3);
+    ctx.shadowBlur = 0;
+  }
+
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    ctx.clearRect(0, 0, W, H);
+    const want = targetCount();
+    while (parts.length < want) parts.push(spawn());
+    if (parts.length > want) parts.length = want;
+    const top = scrollY - 160, bottom = scrollY + H + 160;
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      step(p, dt);
+      if (p.age >= p.life || p.y < top || p.y > bottom || p.x < -160 || p.x > W + 160) { parts[i] = spawn(); continue; }
+      draw(p);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  addEventListener('resize', resize);
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>
