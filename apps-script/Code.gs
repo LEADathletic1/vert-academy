@@ -8,8 +8,8 @@
  * (Monday 6:00 AM to Saturday 10:00 AM Pacific) and the 8-spot cap under a lock,
  * so two people can never take the last spot at the same time.
  *
- * Optional Zenzap alert: set Script Properties ZENZAP_API_KEY, ZENZAP_API_SECRET
- * and ZENZAP_TOPIC_ID (Project Settings > Script Properties). Leave them unset to skip.
+ * Optional Zenzap alert: set Script Properties ZENZAP_API_KEY, ZENZAP_API_SECRET,
+ * ZENZAP_BASE_URL, then run findZenzapChat() and testZenzap(). Leave unset to skip.
  */
 
 var VA = {
@@ -99,7 +99,7 @@ function doPost(e) {
     var text = 'New Vert Academy sign-up (' + spot + '/' + VA.CAPACITY + ')\n' +
       label + '\n' + name + '\n' + phone + '\n' + email +
       (spot >= VA.CAPACITY ? '\nSESSION IS NOW FULL. Registration closed.' : '');
-    notifyZenzap_(text, 'va-' + id + '-' + spot);
+    notifyZenzap_(text, 'va-' + id + '-' + spot + '-' + Date.now());
   } catch (err) {
     console.error('Zenzap notify failed: ' + err);
   }
@@ -182,36 +182,55 @@ function json_(obj) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Zenzap notification (optional)                                      */
-/* Docs: https://docs.zenzap.co/api-reference/messages/send-a-message  */
+/* Zenzap sign-up alerts (optional)                                    */
+/* Docs: https://docs.zenzap.co/api-reference/authentication           */
+/*                                                                     */
+/* Script Properties (Project Settings > Script Properties):           */
+/*   ZENZAP_API_KEY     API key from the Zenzap console                */
+/*   ZENZAP_API_SECRET  API secret from the Zenzap console             */
+/*   ZENZAP_BASE_URL    API Base URL shown in the console, e.g.        */
+/*                      https://api.us.zenzap.co (US workspaces) or    */
+/*                      https://api.zenzap.co (EU workspaces)          */
+/*   ZENZAP_TOPIC_ID    set for you by running findZenzapChat()        */
 /* ------------------------------------------------------------------ */
 
-function notifyZenzap_(text, externalId) {
+/** Signed request to the Zenzap API. Returns {code, text, json} or null if not configured. */
+function zenzap_(method, path, bodyObj) {
   var props = PropertiesService.getScriptProperties();
   var key = props.getProperty('ZENZAP_API_KEY');
   var secret = props.getProperty('ZENZAP_API_SECRET');
-  var topic = props.getProperty('ZENZAP_TOPIC_ID');
-  if (!key || !secret || !topic) return null;
+  var base = (props.getProperty('ZENZAP_BASE_URL') || 'https://api.zenzap.co').replace(/\/+$/, '');
+  if (!key || !secret) return null;
 
-  var payload = { topicId: topic, text: text };
-  if (externalId) payload.externalId = String(externalId).slice(0, 60);
-  var body = JSON.stringify(payload);
   var ts = String(Date.now());
-  var sigBytes = Utilities.computeHmacSignature(
-    Utilities.MacAlgorithm.HMAC_SHA_256, ts + '.' + body, secret, Utilities.Charset.UTF_8);
-  var sig = sigBytes.map(function (b) { return ('0' + (b & 0xff).toString(16)).slice(-2); }).join('');
+  var body = bodyObj ? JSON.stringify(bodyObj) : '';
+  // GET signs "{timestamp}.{path+query}"; POST signs "{timestamp}.{raw body}"
+  var signed = ts + '.' + (method === 'get' ? path : body);
+  var sig = Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_256, signed, secret, Utilities.Charset.UTF_8)
+    .map(function (b) { return ('0' + (b & 0xff).toString(16)).slice(-2); }).join('');
 
-  var res = UrlFetchApp.fetch('https://api.zenzap.co/v2/messages', {
-    method: 'post',
-    contentType: 'application/json',
-    payload: body,
+  var opts = {
+    method: method,
     headers: { 'Authorization': 'Bearer ' + key, 'X-Signature': sig, 'X-Timestamp': ts },
     muteHttpExceptions: true
-  });
-  if (res.getResponseCode() >= 300) {
-    console.error('Zenzap ' + res.getResponseCode() + ': ' + res.getContentText());
-  }
-  return res.getResponseCode();
+  };
+  if (method !== 'get') { opts.contentType = 'application/json'; opts.payload = body; }
+
+  var res = UrlFetchApp.fetch(base + path, opts);
+  var out = { code: res.getResponseCode(), text: res.getContentText() };
+  try { out.json = JSON.parse(out.text); } catch (e) { out.json = null; }
+  return out;
+}
+
+function notifyZenzap_(text, externalId) {
+  var topic = PropertiesService.getScriptProperties().getProperty('ZENZAP_TOPIC_ID');
+  if (!topic) return null;
+  var payload = { topicId: topic, text: text };
+  if (externalId) payload.externalId = String(externalId).slice(0, 60);
+  var res = zenzap_('post', '/v2/messages', payload);
+  if (!res) return null;
+  if (res.code >= 300) console.error('Zenzap ' + res.code + ': ' + res.text);
+  return res.code;
 }
 
 /* ------------------------------------------------------------------ */
@@ -226,8 +245,39 @@ function setup() {
   Logger.log('Ready. Signups tab: ' + sh.getName());
 }
 
-/** Sends a test message to your Zenzap chat (after setting the Script Properties). */
+/**
+ * Lists the Zenzap chats your API bot belongs to. If exactly one chat name
+ * contains "Vert", its ID is saved as ZENZAP_TOPIC_ID automatically.
+ */
+function findZenzapChat() {
+  var topics = [], cursor = '', page = 0, res;
+  do {
+    var path = '/v2/topics?limit=100' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : '');
+    res = zenzap_('get', path);
+    if (!res) { Logger.log('Set ZENZAP_API_KEY and ZENZAP_API_SECRET in Script Properties first.'); return; }
+    if (res.code >= 300 || !res.json) { Logger.log('Zenzap HTTP ' + res.code + ': ' + res.text); return; }
+    topics = topics.concat(res.json.topics || []);
+    cursor = res.json.hasMore ? res.json.nextCursor : '';
+  } while (cursor && ++page < 10);
+
+  if (!topics.length) {
+    Logger.log('The API bot is not in any chats yet. Add it to your "Vert Academy Sign-ups" chat in Zenzap, then run this again.');
+    return;
+  }
+  topics.forEach(function (t) { Logger.log((t.type || 'topic') + ' | ' + t.name + ' | ' + t.id); });
+
+  var matches = topics.filter(function (t) { return /vert/i.test(t.name || '') && t.type !== 'dm'; });
+  if (matches.length === 1) {
+    PropertiesService.getScriptProperties().setProperty('ZENZAP_TOPIC_ID', matches[0].id);
+    Logger.log('Saved ZENZAP_TOPIC_ID for "' + matches[0].name + '". Now run testZenzap.');
+  } else {
+    Logger.log(matches.length + ' chats have "Vert" in the name. Copy the right ID from the list above into the ZENZAP_TOPIC_ID Script Property.');
+  }
+}
+
+/** Sends a test message to your Zenzap chat. */
 function testZenzap() {
   var code = notifyZenzap_('Vert Academy test: sign-up alerts are connected.', 'va-test-' + Date.now());
-  Logger.log(code === null ? 'Zenzap properties not set.' : 'Zenzap responded with HTTP ' + code);
+  if (code === null) Logger.log('Missing Script Properties: need ZENZAP_API_KEY, ZENZAP_API_SECRET and ZENZAP_TOPIC_ID (run findZenzapChat).');
+  else Logger.log(code < 300 ? 'Sent. Check the Zenzap chat. (HTTP ' + code + ')' : 'Zenzap returned HTTP ' + code + '. See the error above.');
 }
