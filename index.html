@@ -89,6 +89,10 @@
   .hero h1 { font-size: clamp(56px, 9vw, 124px); line-height: 0.92; letter-spacing: 0.02em; font-weight: 700; color: var(--accent); }
   .hero h1 .thin { display: block; color: transparent; -webkit-text-stroke: 1.5px var(--accent); }
   .hero p.lede { font-size: 18px; color: var(--text-2); max-width: 520px; margin: 24px 0 0; }
+  .price-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 22px; }
+  .price { font-family: var(--mono); font-size: 22px; color: var(--text); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 6px 12px; }
+  .price-note { font-family: var(--mono); font-size: 12px; line-height: 1.6; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  @media (max-width: 420px) { .price-note { font-size: 11px; letter-spacing: 0.03em; } }
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 10px;
     min-height: 48px; padding: 0 28px; border-radius: var(--radius);
@@ -255,6 +259,10 @@
     <div class="wrap">
       <h1>Vert<span class="thin">Academy</span></h1>
       <p class="lede">Time to get your bounce up. Reserve your spot below.</p>
+      <div class="price-row">
+        <span class="price">$30</span>
+        <span class="price-note">Per session<br>Pay on arrival · Cash or Venmo</span>
+      </div>
     </div>
   </section>
 
@@ -293,6 +301,7 @@
             <div><span>SPOTS FILLED</span><span id="rFilled">--</span></div>
             <div><span>SPOTS LEFT</span><span id="rLeft" class="accent">--</span></div>
             <div><span>SESSION STARTS IN</span><span id="rCountdown">--</span></div>
+            <div><span>PRICE</span><span>$30 · PAY ON ARRIVAL</span></div>
           </div>
         </div>
         <div id="regPanel"></div>
@@ -339,7 +348,7 @@
     <div class="hp" aria-hidden="true"><label for="fWebsite">Website</label><input id="fWebsite" name="website" type="text" tabindex="-1" autocomplete="off"></div>
     <div class="form-msg" id="formMsg" role="alert"></div>
     <div class="form-foot">
-      <span class="fine">We'll use your contact info for session updates only.</span>
+      <span class="fine">$30, paid on arrival. Cash or Venmo accepted. We'll use your contact info for session updates only.</span>
       <button class="btn btn-primary" type="submit" id="submitBtn">Claim my spot</button>
     </div>
   </form>
@@ -572,7 +581,7 @@ const CONFIG = {
       const b = state.justBooked && state.justBooked.session === s.id ? state.justBooked : mine;
       panel.innerHTML = `<div class="state-panel">
           <div class="big"><span class="accent">Confirmed.</span><br>You're in.</div>
-          <p>Your spot for ${esc(fDayLong.format(s.start))} at ${fTime.format(s.start)} is locked in. Show up ready to train.</p>
+          <p>Your spot for ${esc(fDayLong.format(s.start))} at ${fTime.format(s.start)} is locked in. Bring $30 (cash or Venmo); payment is due when you arrive.</p>
           <div class="confirm-code">
             <div><span>ATHLETE</span> ${esc(b.name || '')}</div>
             <div><span>SPOT</span> ${pad(b.spot)} / ${pad(CAP)}</div>
